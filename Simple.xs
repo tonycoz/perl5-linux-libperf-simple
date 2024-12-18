@@ -36,35 +36,36 @@ typedef libperf_simple *Linux__libperf__Simple;
 struct my_perf_event_attr {
   const char *key;
   struct perf_event_attr attr;
+  const char *unit;
 };
 
 static struct my_perf_event_attr
 ev_attr[] =
   {
     {
-      "cpu-cycles",
+      "cycles",
       {
         .type = PERF_TYPE_HARDWARE,
         .config = PERF_COUNT_HW_CPU_CYCLES,
-        .read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_ENABLED,
+        /*.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_RUNNING,*/
         .disabled = 1,
-      }
+      },
     },
     {
       "instructions",
       {
         .type = PERF_TYPE_HARDWARE,
         .config = PERF_COUNT_HW_INSTRUCTIONS,
-        .read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_ENABLED,
+        /*.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_RUNNING,*/
         .disabled = 1,
       }
     },
     {
-      "branch-instructions",
+      "branches",
       {
         .type = PERF_TYPE_HARDWARE,
         .config = PERF_COUNT_HW_BRANCH_INSTRUCTIONS,
-        .read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_ENABLED,
+        /*.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_RUNNING,*/
         .disabled = 1,
       }
     },
@@ -73,7 +74,7 @@ ev_attr[] =
       {
         .type = PERF_TYPE_HARDWARE,
         .config = PERF_COUNT_HW_BRANCH_MISSES,
-        .read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_ENABLED,
+        /*.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_RUNNING,*/
         .disabled = 1,
       }
     },
@@ -82,7 +83,7 @@ ev_attr[] =
       {
         .type = PERF_TYPE_HARDWARE,
         .config = PERF_COUNT_HW_BUS_CYCLES,
-        .read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_ENABLED,
+        /*.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_RUNNING,*/
         .disabled = 1,
       }
     },
@@ -91,7 +92,7 @@ ev_attr[] =
       {
         .type = PERF_TYPE_HARDWARE,
         .config = PERF_COUNT_HW_CACHE_MISSES,
-        .read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_ENABLED,
+        /*.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_RUNNING,*/
         .disabled = 1,
       }
     },
@@ -100,9 +101,42 @@ ev_attr[] =
       {
         .type = PERF_TYPE_HARDWARE,
         .config = PERF_COUNT_HW_CACHE_REFERENCES,
-        .read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_ENABLED,
+        /*.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_RUNNING,*/
         .disabled = 1,
       }
+    },
+    {
+      "task-clock",
+      {
+        .type = PERF_TYPE_SOFTWARE,
+        .config = PERF_COUNT_SW_TASK_CLOCK,
+        .disabled = 1,
+      },
+      "ns"
+    },
+    {
+      "context-switches",
+      {
+        .type = PERF_TYPE_SOFTWARE,
+        .config = PERF_COUNT_SW_CONTEXT_SWITCHES,
+        .disabled = 1,
+      }
+    },
+    {
+      "cpu-migrations",
+      {
+        .type = PERF_TYPE_SOFTWARE,
+        .config = PERF_COUNT_SW_CPU_MIGRATIONS,
+        .disabled = 1,
+      },
+    },
+    {
+      "page-faults",
+      {
+        .type = PERF_TYPE_SOFTWARE,
+        .config = PERF_COUNT_SW_PAGE_FAULTS,
+        .disabled =1,
+      },
     },
   };
 
@@ -194,10 +228,12 @@ lps_results(libperf_simple *obj) {
 
     struct perf_event_attr *attr = perf_evsel__attr(evsel);
     hv_stores(entry, "val", newSVnum(counts.val));
-    hv_stores(entry, "run", newSVnum(counts.run));
+    if (attr->read_format & PERF_FORMAT_TOTAL_TIME_RUNNING)
+      hv_stores(entry, "run", newSVnum(counts.run));
     if (attr->read_format & PERF_FORMAT_ID)
       hv_stores(entry, "id", newSVnum(counts.id));
-    hv_stores(entry, "enabled", newSVnum(counts.ena));
+    if (attr->read_format & PERF_FORMAT_TOTAL_TIME_ENABLED)
+      hv_stores(entry, "enabled", newSVnum(counts.ena));
     if (attr->read_format & PERF_FORMAT_LOST)
       hv_stores(entry, "lost", newSVnum(counts.lost));
 

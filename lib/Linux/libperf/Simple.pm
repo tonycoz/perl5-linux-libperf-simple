@@ -1,6 +1,10 @@
 package Linux::libperf::Simple;
 use v5.36;
 
+use Exporter qw(import);
+
+our @EXPORT_OK = qw(run report);
+
 our $VERSION;
 BEGIN {
   $VERSION = "1.000";
@@ -9,6 +13,35 @@ BEGIN {
 }
 
 sub CLONE_SKIP {}
+
+sub run {
+  my ($code) = @_;
+
+  my $perf = __PACKAGE__->new;
+  $perf->enable;
+  $code->();
+  $perf->disable;
+  my $result = $perf->results;
+  undef $perf;
+
+  return $result;
+}
+
+sub _pretty {
+  my $num = shift;
+  while ($num =~ s/(.*\d)(\d{3})(?:$|(?=,))/$1,$2/) {
+  }
+  $num;
+}
+
+sub report {
+  my ($code) = @_;
+
+  my $result = run($code);
+  for my $key (sort keys %$result) {
+    print "$key: ", _pretty($result->{$key}{val}), "\n";
+  }
+}
 
 1;
 
@@ -85,6 +118,27 @@ following possible keys (some are currently never used):
 =item * run
 
 =back
+
+=back
+
+=head1 EXPORTABLE FUNCTIONS
+
+=over
+
+=item run(CODEREF)
+
+  use Linux::libperf::Simple "run";
+  my $results = run(sub { code to check });
+
+Run CODEREF and returning the timing from running it.  Returns a
+hashref as per results() above.
+
+=item report(CODEREF)
+
+  use Linux::libperf::Simple "report";
+  report(sub { code to check });
+
+Run CODEREF and produces a simple report to standard output.
 
 =back
 
