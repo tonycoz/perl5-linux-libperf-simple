@@ -1,5 +1,6 @@
 package Linux::libperf::Simple;
-use v5.36;
+use strict;
+use warnings;
 
 use Exporter qw(import);
 
