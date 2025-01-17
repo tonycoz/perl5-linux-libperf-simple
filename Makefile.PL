@@ -5,16 +5,35 @@ use Getopt::Long;
 use List::Util "first";
 use Config;
 
-my $verbose = $ENV{IM_VERBOSE};
-my @libpaths;
-my @incpaths;
-
 $^O eq "linux"
   or die "OS unsupported: Linux::libperf::Simple requires linux\n";
 
-GetOptions("incpath=s", \@incpaths,
-           "libpath=s" => \@libpaths,
-           "verbose|v" => \$verbose);
+my $pkgname = first { system("pkg-config --exists $_") == 0 } qw( libperf );
+
+die <<'DIE' unless $pkgname;
+OS unsupported: Can't find pkg-config for libperf.
+  pkg-config --exists libperf
+failed.
+DIE
+
+print "Found $pkgname\n";
+
+my $cflags = `pkg-config --cflags $pkgname`;
+my $ldflags = `pkg-config --libs $pkgname`;
+my $version = `pkg-config --modversion $pkgname`;
+
+unless ($cflags && $ldflags && $cflags =~ /\S/ && $ldflags =~ /\S/) {
+  die <<'DIE'
+OS unsupported: libperf libraries or headers not found
+
+  pkg-config --cflags libperf
+or
+  pkg-config --libs libperf
+
+didn't return a useful result.
+DIE
+}
+tr/\n /  /s for $cflags, $ldflags;
 
 my %opts = 
   (
@@ -85,32 +104,6 @@ $opts{PREREQ_PM} =
   {
     XSLoader => 0,
   };
-
-
-my $pkgname = first { system("pkg-config --exists $_") == 0 } qw( libperf );
-
-die <<'DIE' unless $pkgname;
-OS unsupported: Can't find pkg-config for libperf.
-DIE
-
-print "Found $pkgname\n";
-
-my $cflags = `pkg-config --cflags $pkgname`;
-my $ldflags = `pkg-config --libs $pkgname`;
-my $version = `pkg-config --modversion $pkgname`;
-
-unless ($cflags && $ldflags && $cflags =~ /\S/ && $ldflags =~ /\S/) {
-  die <<'DIE'
-OS unsupported: libperf libraries or headers not found
-
-  pkg-config --cflags libperf
-or
-  pkg-config --libs libperf
-
-didn't return a useful result.
-DIE
-}
-tr/\n /  /s for $cflags, $ldflags;
 
 WriteMakefile
   (

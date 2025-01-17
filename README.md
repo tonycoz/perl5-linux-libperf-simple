@@ -18,6 +18,12 @@ cd tools/lib/perf
 make prefix=/where/to/install install
 ```
 
+When configuring `Linux-libperf-Simple`, ensure `libperf.pc` from the `libperf` build is in the `PKG_CONFIG_PATH` environment variable, eg.:
+
+```
+PKG_CONFIG_PATH=~/local/libperf/lib64/pkgconfig/ perl Makefile.PL
+```
+
 To actually use this module you will either need to be root, or
 `kernel.perf_event_paranoid` may need to be set to a lower value than
 the default, look this up before using it.
