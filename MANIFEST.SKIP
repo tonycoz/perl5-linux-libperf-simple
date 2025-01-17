@@ -1,0 +1,10 @@
+\.o$
+^Makefile$
+^Simple\.c$
+\.bs$
+~$
+\.github/
+\.git/
+^blib/
+^pm_to_blib$
+^MYMETA\.
