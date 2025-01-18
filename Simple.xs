@@ -78,6 +78,7 @@ ev_attr[] =
         .disabled = 1,
       }
     },
+#if 0 /* not portable enough */
     {
       "bus-cycles",
       {
@@ -87,6 +88,7 @@ ev_attr[] =
         .disabled = 1,
       }
     },
+#endif
     {
       "cache-misses",
       {
