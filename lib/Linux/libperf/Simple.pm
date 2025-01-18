@@ -8,7 +8,7 @@ our @EXPORT_OK = qw(run report);
 
 our $VERSION;
 BEGIN {
-  $VERSION = "1.000";
+  $VERSION = "1.001";
   use XSLoader;
   XSLoader::load("Linux::libperf::Simple" => $VERSION);
 }
